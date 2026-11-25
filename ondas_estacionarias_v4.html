@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ondas estacionarias en una cuerda fija en ambos extremos</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🎸%3C/text%3E%3C/svg%3E">
+<style>
+:root{--ac:#FFC000;--tx:#343536;--bd:#e6e1d0}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;font:16px/1.45 "Segoe UI",Arial,sans-serif;color:var(--tx);background:#fff}
+header{padding:12px 18px 0;border-bottom:6px solid var(--ac)}
+h1{font-size:clamp(20px,2.2vw,30px);margin:0 0 10px}
+.tabs{display:flex;flex-wrap:wrap;gap:6px}
+button{font:inherit;font-weight:700;font-size:17px;color:var(--tx);background:#fff;border:2px solid var(--tx);border-radius:10px;padding:8px 14px;cursor:pointer;box-shadow:0 3px 0 var(--tx)}
+button:hover{background:#fff3cc}button:active{transform:translateY(2px);box-shadow:0 1px 0 var(--tx)}
+button.on{background:var(--ac)}button:disabled{opacity:.4}
+.tabs button{border-radius:12px 12px 0 0;box-shadow:none;border-bottom:none;padding:10px 16px}
+main{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(330px,1fr);gap:16px;padding:16px}
+@media(max-width:1000px){main{grid-template-columns:1fr}}
+.card{border:2px solid var(--bd);border-radius:14px;padding:14px;margin-bottom:16px;box-shadow:0 4px 14px rgba(52,53,54,.08);background:#fff}
+.card h2{margin:0 0 8px;font-size:19px;border-left:8px solid var(--ac);padding-left:10px}
+.cap{background:#fff8e1;border-color:var(--ac);font-size:18px}
+.cv{position:relative;border:3px solid var(--tx);border-radius:16px;margin-bottom:16px;overflow:hidden;box-shadow:0 6px 18px rgba(52,53,54,.18)}
+canvas{display:block;width:100%;aspect-ratio:16/9}
+#badge{position:absolute;left:14px;top:12px;padding:6px 16px;border-radius:999px;font-size:clamp(18px,2vw,26px);font-weight:800;background:#fff;border:3px solid var(--tx)}
+#badge.ok{background:var(--ac)}
+.row{margin-bottom:8px}.row label{display:block;font-weight:600}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:10px;border-radius:8px;background:linear-gradient(90deg,var(--ac),#ffe08a);margin:12px 0;outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:28px;height:28px;border-radius:50%;background:#fff;border:4px solid var(--tx);cursor:pointer}
+input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:#fff;border:4px solid var(--tx);cursor:pointer}
+input[type=range]:disabled{opacity:.4}
+.btns{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0}
+.nb button{width:50px;height:50px;font-size:22px;padding:0}
+table{width:100%;border-collapse:collapse}td{padding:6px 4px;border-bottom:1px solid var(--bd)}
+td:last-child{text-align:right;font-weight:800;font-size:19px}
+.hl{background:var(--ac);border-radius:6px}.wi div{padding:4px 8px;margin:3px 0}
+.sw{display:flex;gap:8px;align-items:center;font-weight:600}.sw input{width:24px;height:24px;accent-color:var(--tx)}
+.nota{color:#666;font-size:16px}
+#spec{display:flex;gap:6px;align-items:flex-end;height:190px}
+.bc{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;cursor:pointer;min-width:0}
+.bc small{font-size:16px;font-weight:700;height:22px}
+.bar{width:100%;background:var(--ac);border:2px solid var(--tx);border-radius:8px 8px 0 0}
+.bar.dim{background:#ffe9a8}.bar.off{background:#e8e8e8;border-color:#aaa}
+</style>
+</head>
+<body>
+<header><h1>Ondas estacionarias en una cuerda fija en ambos extremos</h1><nav class="tabs" id="tabs"></nav></header>
+<main>
+<section>
+  <div class="card cap" id="cap"></div>
+  <div class="cv"><canvas id="cv"></canvas><div id="badge"></div></div>
+  <div class="card" data-t="BCD"><h2 id="specT"></h2><div id="spec"></div><div id="specN" class="nota"></div></div>
+  <div class="card wi" data-t="B"><h2>Qué pasa si…</h2>
+    <div id="w_L">L ÷ 2 → f₁ × 2 <span class="nota">(f₁ ∝ 1/L)</span></div>
+    <div id="w_T">T × 4 → f₁ × 2 <span class="nota">(f₁ ∝ √T)</span></div>
+    <div id="w_mu">μ × 4 → f₁ ÷ 2 <span class="nota">(f₁ ∝ 1/√μ)</span></div>
+    <div id="w_A">La amplitud A no cambia f₁</div>
+    <div class="btns"><button id="qL">L ÷ 2</button><button id="qT">T × 4</button><button id="qM">μ × 4</button></div>
+    <div id="live"></div>
+  </div>
+  <div class="card"><h2>Fórmulas</h2>
+    yₙ(x,t) = A·sen(n·π·x/L)·cos(2π·fₙ·t) &nbsp;(0 ≤ x ≤ L)<br>
+    λₙ = 2L/n &nbsp;|&nbsp; v = √(T/μ) &nbsp;|&nbsp; T = m·g (g = 9,8 m/s²)<br>
+    fₙ = n·v/(2L) = n·f₁ &nbsp;con&nbsp; f₁ = (1/2L)·√(T/μ) &nbsp;|&nbsp; n antinodos y n+1 nodos
+  </div>
+</section>
+<aside>
+  <div class="card"><h2>Controles</h2>
+    <div id="sl"></div>
+    <div class="row" data-t="ABC"><label>Modo n: <b id="v_n"></b></label><div class="nb btns" id="nb"></div></div>
+    <div class="row" data-t="C"><label>Tocar suave sobre un nodo (sin presionar):</label>
+      <div class="btns" id="touch"><button data-p="0">Sin tocar</button><button data-p="2">Traste 12 · L/2</button><button data-p="3">Traste 7 · L/3</button><button data-p="4">Traste 5 · L/4</button></div></div>
+    <div class="row" data-t="D"><label>Punto de pulsación x₀: <b id="v_x0"></b></label>
+      <input type="range" id="s_x0" min="0.05" max="0.5" step="0.005">
+      <div class="btns" id="px"><button data-x="0.5">L/2</button><button data-x="0.3333333">L/3</button><button data-x="0.25">L/4</button><button data-x="0.1">Cerca del extremo</button></div></div>
+    <div id="slf" data-t="E"></div>
+    <div class="btns" data-t="E"><button id="bNext">Ir a la siguiente resonancia ▶</button></div>
+    <div class="btns"><button id="bPause">⏸ Pausar</button><span>Cámara lenta:</span>
+      <button class="sp" data-sp="1">1x</button><button class="sp" data-sp="0.25">0,25x</button><button class="sp" data-sp="0.05">0,05x</button></div>
+    <div class="btns"><button id="bReset">↺ Reiniciar</button><button id="bFs">⛶ Pantalla completa</button></div>
+    <label class="sw" data-t="AE"><input type="checkbox" id="chkW"> Mostrar onda incidente, reflejada y su suma</label>
+    <div class="nota" data-t="AE">Aquí A es la amplitud del antinodo: cada onda viajera tiene A/2.</div>
+    <div class="btns"><button id="bEx1">Ejemplo del guion</button><button id="bEx2">Ejemplo guitarra</button></div>
+    <div id="exNote"></div>
+  </div>
+  <div class="card"><h2>Datos en vivo</h2><table id="dat"></table>
+    <p class="nota">Escala visual: el movimiento se ve 25 veces más lento que el real; los Hz del panel son los reales. Amplitud exagerada.</p></div>
+</aside>
+</main>
+<script>
+'use strict';
+const $ = id => document.getElementById(id);
+const G = 9.8, VIS = 0.04, TOL = 0.015;   // g, factor visual de tiempo, tolerancia de resonancia ±1,5 %
+const fmt = (x, d = 2) => x.toFixed(d).replace('.', ',');
+const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+const sb = n => String(n).replace(/\d/g, d => '₀₁₂₃₄₅₆₇₈₉'[d]);   // subíndices
+
+// ---------- Estado ----------
+const S = {L:0.65, m:0.20, mu:5, A:5, n:1, f:15, tab:'A', speed:1, paused:false, waves:false, Tfix:null, tau:0, touch:0, x0:0.3};
+let ref = null, last = null;
+
+// ---------- Pestañas = diapositivas del guion ----------
+const TABS = [['A','2–3 · Modos normales'],['B','4–5 · Armónicos y f₁'],['C','6 · Guitarra'],['D','7 · Timbre'],['E','8 · Melde / resonancia']];
+const CAP = {
+ A:'<b>Modos normales.</b> Los extremos fijos son nodos: sen(kL) = 0 ⇒ kL = nπ ⇒ λₙ = 2L/n. En la cuerda caben n medias ondas (cada baldosa mide λ/2). El modo n tiene n antinodos y n+1 nodos.',
+ B:'<b>Frecuencia fundamental y armónicos.</b> fₙ = n·v/(2L) = n·f₁, con f₁ = (1/2L)·√(T/μ). Ojo: v es la rapidez en la cuerda, no la del sonido en el aire. Cambia L, T (masa) o μ en «Qué pasa si…»; la amplitud no cambia f₁.',
+ C:'<b>Armónicos naturales.</b> Tocar suave sobre un nodo obliga a que ahí haya un nodo: sobreviven solo los modos que ya lo tienen. Traste 12 → nodo en L/2 → suena 2f₁; traste 7 → L/3 → 3f₁; traste 5 → L/4 → 4f₁.',
+ D:'<b>Punto de pulsación y timbre.</b> Un modo con un nodo justo donde pulsamos no se excita. La cuerda real vibra con varios modos a la vez: bₙ ∝ |sen(nπx₀/L)|/n². Esa mezcla de armónicos es el timbre.',
+ E:'<b>Experimento de Melde.</b> T = m·g. Sube f despacio: cuando f ≈ n·f₁ (±1,5 %) aparece la onda estacionaria con n lazos. Pregunta: con f fija, más masa ⇒ T↑ ⇒ f₁↑ ⇒ menos lazos.'};
+const INTERVALO = ['','fundamental','octava arriba','octava + quinta','dos octavas','dos octavas + tercera mayor','dos octavas + quinta'];
+TABS.forEach(([k, lab]) => { const b = document.createElement('button'); b.textContent = lab; b.id = 'tab' + k; b.onclick = () => { S.tab = k; refresh(); }; $('tabs').appendChild(b); });
+
+// ---------- Física ----------
+function calc(){
+  const T = S.Tfix ?? S.m * G;            // T = m·g
+  const v = Math.sqrt(T / (S.mu / 1000)); // v = √(T/μ)
+  return {T, v, f1: v / (2 * S.L)};       // f₁ = (1/2L)·√(T/μ)
+}
+function info(f1){   // modo mostrado y resonancia (solo en la pestaña de Melde)
+  if (S.tab !== 'E') return {r:(S.tab === 'C' && S.touch) ? S.touch : S.n, inTol:true, w:1};
+  const r = Math.max(1, Math.round(S.f / f1)), d = Math.abs(S.f - r * f1) / (r * f1), inTol = d <= TOL;
+  let w = inTol ? 1 : Math.max(0, 1 - (d - TOL) / 0.03); w = w * w * (3 - 2 * w);
+  return {r, d, inTol, w};
+}
+const ampN = n => Math.abs(Math.sin(n * Math.PI * S.x0)) / (n * n);   // bₙ ∝ |sen(nπx₀/L)|/n²
+function ampArr(){ const a = [0]; let mx = 0; for (let n = 1; n <= 12; n++){ a[n] = ampN(n); mx = Math.max(mx, a[n]); } return a.map(x => x / mx); }
+function timbre(){
+  const x = S.x0, c = v => Math.abs(x - v) < 0.012;
+  return c(0.5) ? 'hueco y suave (faltan los armónicos pares)' : c(1/3) ? 'faltan los múltiplos de 3' : c(0.25) ? 'faltan los múltiplos de 4'
+    : x < 0.15 ? 'brillante (más armónicos agudos)' : x > 0.4 ? 'más suave y grave' : 'intermedio';
+}
+
+// ---------- Controles ----------
+const defs = [['L','Longitud L',0.40,1.50,0.01,'m',2],['m','Masa colgante m',0.05,1,0.01,'kg',2],
+  ['mu','Densidad lineal μ',1,12,0.1,'g/m',1],['A','Amplitud A',1,10,0.5,'mm',1],['f','Frecuencia del vibrador f',5,700,0.1,'Hz',2]];
+defs.forEach(([k,lab,mn,mx,st]) => {
+  const d = document.createElement('div'); d.className = 'row';
+  d.innerHTML = `<label for="s_${k}">${lab}: <b id="v_${k}"></b></label><input type="range" id="s_${k}" min="${mn}" max="${mx}" step="${st}">`;
+  $(k === 'f' ? 'slf' : 'sl').appendChild(d);
+  $('s_' + k).oninput = e => { S[k] = +e.target.value; if (k === 'm') S.Tfix = null; last = k === 'm' ? 'T' : k; refresh(); };
+});
+for (let i = 1; i <= 6; i++){ const b = document.createElement('button'); b.textContent = i; b.id = 'n' + i; b.onclick = () => { S.n = i; S.touch = 0; refresh(); }; $('nb').appendChild(b); }
+$('s_x0').oninput = e => { S.x0 = +e.target.value; refresh(); };
+document.querySelectorAll('#px button').forEach(b => b.onclick = () => { S.x0 = +b.dataset.x; refresh(); });
+document.querySelectorAll('#touch button').forEach(b => b.onclick = () => { S.touch = +b.dataset.p; refresh(); });
+$('spec').onclick = e => { const bc = e.target.closest('.bc'); if (bc && (S.tab === 'A' || S.tab === 'B') && +bc.dataset.n <= 6){ S.n = +bc.dataset.n; refresh(); } };
+
+// ---------- Actualización de paneles ----------
+function refresh(){
+  const {T, v, f1} = calc(), inf = info(f1), t = S.tab, nm = inf.r;
+  if (t !== 'E') S.f = clamp(nm * f1, 5, 700);
+  document.querySelectorAll('[data-t]').forEach(e => e.hidden = !e.dataset.t.includes(t));
+  TABS.forEach(([k]) => $('tab' + k).classList.toggle('on', k === t));
+  $('cap').innerHTML = CAP[t];
+  defs.forEach(([k,,,,,u,d]) => { $('s_' + k).value = S[k]; $('v_' + k).textContent = fmt(S[k], d) + ' ' + u; });
+  $('v_m').textContent = S.Tfix ? `${fmt(T / G)} kg equiv. · T = ${fmt(T)} N (fijada)` : `${fmt(S.m)} kg · T = ${fmt(T)} N`;
+  $('s_x0').value = S.x0; $('v_x0').textContent = `${fmt(S.x0, 3)}·L = ${fmt(S.x0 * S.L, 3)} m`;
+  $('v_n').textContent = S.n;
+  for (let i = 1; i <= 6; i++) $('n' + i).classList.toggle('on', S.n === i && !(t === 'C' && S.touch));
+  document.querySelectorAll('#touch button').forEach(b => b.classList.toggle('on', +b.dataset.p === S.touch));
+  document.querySelectorAll('.sp').forEach(b => b.classList.toggle('on', +b.dataset.sp === S.speed));
+  $('bPause').textContent = S.paused ? '▶ Reproducir' : '⏸ Pausar'; $('chkW').checked = S.waves;
+  // Insignia sobre el dibujo
+  const b = $('badge'); b.className = '';
+  if (t === 'E'){ b.textContent = inf.inTol ? `RESONANCIA: modo ${nm}` : `Fuera de resonancia (f/f₁ = ${fmt(S.f / f1)})`; if (inf.inTol) b.className = 'ok'; }
+  else if (t === 'D') b.textContent = 'Cuerda pulsada = suma de modos';
+  else if (t === 'C' && S.touch){ b.textContent = `Armónico natural: suena ${nm}·f₁`; b.className = 'ok'; }
+  else b.textContent = `Modo n = ${nm}`;
+  // Tabla de datos
+  const n = inf.inTol ? nm : null;
+  let rows = [['Tensión T = m·g', fmt(T) + ' N'], ['Rapidez v = √(T/μ)', fmt(v, 1) + ' m/s'], ['Frecuencia fundamental f₁', fmt(f1) + ' Hz']];
+  if (t === 'D'){
+    const aus = []; for (let i = 1; i <= 12; i++) if (Math.abs(Math.sin(i * Math.PI * S.x0)) < 0.02) aus.push(i);
+    rows.push(['Punto de pulsación x₀', fmt(S.x0 * S.L, 3) + ' m'], ['Armónicos ausentes (1–12)', aus.length ? aus.join(', ') : 'ninguno']);
+  } else {
+    if (t === 'E') rows.push(['Frecuencia del vibrador f', fmt(S.f) + ' Hz']);
+    if (t === 'C') rows.push(['Nodo forzado en', S.touch ? `L/${S.touch} = ${fmt(S.L / S.touch, 3)} m` : '—'],
+      ['Modos que sobreviven', S.touch ? `${S.touch}, ${2 * S.touch}, ${3 * S.touch}, …` : 'solo el modo ' + S.n]);
+    rows.push(['Frecuencia del modo fₙ = n·f₁', n ? fmt(n * f1) + ' Hz' : '—'], ['Longitud de onda λₙ = 2L/n', n ? fmt(2 * S.L / n, 3) + ' m' : '—'],
+      ['Número de antinodos', n ?? '—'], ['Número de nodos (con extremos)', n ? n + 1 : '—']);
+  }
+  $('dat').innerHTML = rows.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('');
+  // Barras de armónicos
+  if ('BCD'.includes(t)){
+    const N = t === 'B' ? 6 : 12, a = ampArr(); let h = '';
+    for (let i = 1; i <= N; i++){
+      let cls, top = '', ht = 120, lab = t === 'B' ? 'f' + sb(i) : i;
+      if (t === 'B'){ ht = 24 + 120 * i / 6; top = fmt(i * f1, 0) + ' Hz'; cls = i === S.n ? '' : 'dim'; }
+      else if (t === 'C'){ const ok = S.touch ? i % S.touch === 0 : i === S.n; cls = ok ? '' : 'off'; top = ok ? '✔' : '✗'; }
+      else { ht = Math.max(4, 120 * a[i]); cls = a[i] < 0.02 ? 'off' : ''; top = a[i] < 0.02 ? 'falta' : ''; }
+      h += `<div class="bc" data-n="${i}"><small>${top}</small><div class="bar ${cls}" style="height:${ht}px"></div><b>${lab}</b></div>`;
+    }
+    $('spec').innerHTML = h;
+    $('specT').textContent = t === 'B' ? 'Los armónicos son múltiplos enteros de f₁ (toca una barra)' : t === 'C' ? '¿Qué modos sobreviven? (número de modo)' : 'Contenido de armónicos al pulsar en x₀ (número de armónico)';
+    $('specN').textContent = t === 'B' ? `Armónico ${S.n}: ${INTERVALO[S.n]}.` : t === 'C' ? (S.touch ? `Nodo en L/${S.touch}: ${S.touch === 2 ? 'suena una octava arriba' : S.touch === 3 ? 'octava + quinta' : 'dos octavas arriba'} (aprox. en el traste ${S.touch === 2 ? 12 : S.touch === 3 ? 7 : 5}).` : 'Sin tocar: vibra solo el modo elegido.') : 'Timbre: ' + timbre() + '.';
+  }
+  // "Qué pasa si…"
+  const rr = x => fmt(x);
+  $('live').innerHTML = `Respecto a la referencia: L ×${rr(S.L / ref.L)} · T ×${rr(T / ref.T)} · μ ×${rr(S.mu / ref.mu)} · A ×${rr(S.A / ref.A)}<br><b>⇒ f₁ ×${rr(f1 / ref.f1)}</b> (de ${fmt(ref.f1)} a ${fmt(f1)} Hz)`;
+  ['L','T','mu','A'].forEach(k => $('w_' + k).classList.toggle('hl', last === k));
+}
+function setRef(){ const c = calc(); ref = {L:S.L, T:c.T, mu:S.mu, A:S.A, f1:c.f1}; }
+
+// ---------- Botones ----------
+$('bPause').onclick = () => { S.paused = !S.paused; refresh(); };
+document.querySelectorAll('.sp').forEach(b => b.onclick = () => { S.speed = +b.dataset.sp; refresh(); });
+$('chkW').onchange = e => { S.waves = e.target.checked; };
+$('bFs').onclick = () => { try { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen(); } catch (e) {} };
+function reset(){
+  Object.assign(S, {L:0.65, m:0.20, mu:5, A:5, n:1, Tfix:null, speed:1, paused:false, waves:false, tau:0, touch:0, x0:0.3});
+  S.f = calc().f1 * 1.5; last = null; setRef(); $('exNote').innerHTML = ''; refresh();
+}
+$('bReset').onclick = reset;
+$('bNext').onclick = () => {   // siguiente resonancia: f₁, 2f₁, 3f₁…
+  const {f1} = calc(), inf = info(f1);
+  let k = inf.inTol ? inf.r + 1 : Math.ceil(S.f / f1 - 1e-9);
+  const kmin = Math.max(1, Math.ceil(5 / f1 - 1e-9));
+  if (k < kmin || k * f1 > 700) k = kmin;
+  S.f = k * f1; refresh();
+};
+$('qL').onclick = () => { S.L = Math.max(0.4, S.L / 2); last = 'L'; refresh(); };
+$('qT').onclick = () => { S.m = clamp(calc().T / G * 4, 0.05, 1); S.Tfix = null; last = 'T'; refresh(); };
+$('qM').onclick = () => { S.mu = Math.min(12, S.mu * 4); last = 'mu'; refresh(); };
+function ejemplo(p, tabs, def, nTxt, esperado){
+  Object.assign(S, p, {tau:0, touch:0}); if (!tabs.includes(S.tab)) S.tab = def;
+  const c = calc(); S.f = clamp(S.n * c.f1, 5, 700); last = null; setRef(); refresh();
+  $('exNote').innerHTML = `<b>Calculado:</b> T = ${fmt(c.T)} N · v = ${fmt(c.v, 1)} m/s · f₁ = ${fmt(c.f1)} Hz · f${nTxt} = ${fmt(S.n * c.f1)} Hz<br><span class="nota">Esperado: ${esperado}</span>`;
+}
+$('bEx1').onclick = () => ejemplo({L:1.2, m:0.2, mu:2, Tfix:null, n:3}, 'E', 'E', '₃', 'T = 1,96 N; v ≈ 31,3 m/s; f₁ ≈ 13 Hz; f₃ ≈ 39 Hz');
+$('bEx2').onclick = () => ejemplo({L:0.65, m:1, mu:5, Tfix:102, n:1}, 'BCD', 'C', '₁', 'v ≈ 142,8 m/s; f₁ ≈ 110 Hz (T = 102 N supera 1 kg, por eso se fija directamente)');
+
+// ---------- Dibujo ----------
+const cv = $('cv'), ctx = cv.getContext('2d');
+function ajustar(){ const d = window.devicePixelRatio || 1; cv.width = Math.round(cv.clientWidth * d); cv.height = Math.round(cv.clientHeight * d); ctx.setTransform(d, 0, 0, d, 0, 0); }
+window.addEventListener('resize', ajustar);
+const rr = (x, y, w, h, r) => { ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x, y, w, h, r) : ctx.rect(x, y, w, h); };
+const dot = (x, y, r, fill, ring) => { ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fillStyle = fill; ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = ring; ctx.stroke(); };
+const txt = (s, x, y, col, al) => { ctx.textAlign = al || 'center'; ctx.lineWidth = 5; ctx.strokeStyle = '#fff'; ctx.strokeText(s, x, y); ctx.fillStyle = col || '#343536'; ctx.fillText(s, x, y); };
+
+function draw(){
+  const W = cv.clientWidth, H = cv.clientHeight; if (!W) return;
+  const c = calc(), t = S.tab, inf = info(c.f1), nm = inf.r, guit = t === 'C' || t === 'D';
+  const u = Math.min(W, 1100) / 1000, fs = clamp(W / 56, 16, 24), ppm = H * 0.022;
+  const fph = t === 'E' ? S.f : t === 'D' ? c.f1 : nm * c.f1, ph = 2 * Math.PI * fph * S.tau, k = nm * Math.PI / S.L;
+  const x0 = guit ? W * 0.08 : W * 0.16, Lpx = guit ? W * 0.7 * (0.62 + 0.38 * (S.L - 0.4) / 1.1) : W * 0.6 * (0.55 + 0.45 * (S.L - 0.4) / 1.1);
+  const x1 = x0 + Lpx, cy = H * (guit ? 0.45 : 0.40), pr = 22 * u + 4, X = x => x0 + x / S.L * Lpx;
+  ctx.font = `bold ${fs}px "Segoe UI",Arial`; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  // Fondo con cuadrícula suave
+  const bg = ctx.createLinearGradient(0, 0, 0, H); bg.addColorStop(0, '#ffffff'); bg.addColorStop(1, '#fff3cf');
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H); ctx.strokeStyle = 'rgba(52,53,54,.06)'; ctx.lineWidth = 1; ctx.beginPath();
+  for (let x = 0; x < W; x += 48){ ctx.moveTo(x, 0); ctx.lineTo(x, H); } for (let y = 0; y < H; y += 48){ ctx.moveTo(0, y); ctx.lineTo(W, y); } ctx.stroke();
+  const trace = (fy, col, lw, dash, glow) => {
+    const N = Math.min(4000, Math.max(500, nm * 16)); ctx.beginPath();
+    for (let i = 0; i <= N; i++){ const x = i / N * S.L, px = X(x), py = cy - fy(x) * ppm; i ? ctx.lineTo(px, py) : ctx.moveTo(px, py); }
+    ctx.strokeStyle = col; ctx.lineWidth = lw; ctx.setLineDash(dash || []);
+    if (glow){ ctx.shadowColor = 'rgba(255,192,0,.95)'; ctx.shadowBlur = 16 * u; } ctx.stroke(); ctx.shadowBlur = 0; ctx.setLineDash([]);
+  };
+
+  // ----- Montaje -----
+  if (!guit){   // Melde: vibrador, polea y masa
+    ctx.strokeStyle = '#bdbdbd'; ctx.lineWidth = 8 * u; ctx.beginPath(); ctx.moveTo(x1, cy + pr); ctx.lineTo(x1, H * 0.93); ctx.stroke();
+    rr(x1 - 30 * u, H * 0.93, 60 * u, 10 * u, 4); ctx.fillStyle = '#8f8f8f'; ctx.fill();
+    const vw = W * 0.12, vh = H * 0.17, dy = t === 'E' ? 3 * u * Math.cos(ph) : 0, vx = x0 - vw - 8 * u;
+    ctx.strokeStyle = '#8f8f8f'; ctx.lineWidth = 7 * u; ctx.beginPath(); ctx.moveTo(x0 - 8 * u, cy + dy); ctx.lineTo(x0, cy + dy); ctx.stroke();
+    rr(vx, cy - vh / 2, vw, vh, 14 * u); ctx.fillStyle = '#343536'; ctx.fill();
+    rr(vx + 8 * u, cy + vh * 0.2, vw - 16 * u, vh * 0.14, 4 * u); ctx.fillStyle = '#FFC000'; ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.fillText('Vibrador', vx + vw / 2, cy - vh * 0.08);
+    const gx = vx + vw * 0.05, gy = H * 0.2, gw2 = vw * 0.9, gh = H * 0.09;
+    ctx.strokeStyle = '#343536'; ctx.lineWidth = 3 * u; ctx.beginPath(); ctx.moveTo(gx + gw2 * 0.5, gy + gh); ctx.quadraticCurveTo(gx + gw2 * 0.5 - 26 * u, cy - vh / 2 - 14 * u, vx + vw * 0.5, cy - vh / 2); ctx.stroke();
+    rr(gx, gy, gw2, gh, 8 * u); ctx.fillStyle = '#ececec'; ctx.fill(); ctx.strokeStyle = '#343536'; ctx.lineWidth = 3; ctx.stroke();
+    rr(gx + 6 * u, gy + 6 * u, gw2 - 12 * u, gh * 0.55, 4 * u); ctx.fillStyle = '#1d2a1d'; ctx.fill();
+    ctx.fillStyle = '#7CFC8A'; ctx.font = `bold ${fs * 0.85}px monospace`; ctx.textAlign = 'center'; ctx.fillText(fmt(S.f, 1) + ' Hz', gx + gw2 / 2, gy + 6 * u + gh * 0.4);
+    ctx.font = `bold ${fs}px "Segoe UI",Arial`; txt('Generador', gx + gw2 / 2, gy - 8);
+    dot(x1, cy + pr, pr, '#fff', '#343536');
+    ctx.strokeStyle = '#343536'; ctx.lineWidth = 2; for (let a = 0; a < 3; a++){ const th = a * Math.PI / 3; ctx.beginPath(); ctx.moveTo(x1 - pr * Math.cos(th), cy + pr - pr * Math.sin(th)); ctx.lineTo(x1 + pr * Math.cos(th), cy + pr + pr * Math.sin(th)); ctx.stroke(); }
+    dot(x1, cy + pr, 5 * u, '#FFC000', '#343536');
+    const mEq = c.T / G, s = (26 + 46 * Math.sqrt(Math.min(mEq, 1.3))) * u, top = cy + pr + H * 0.2, mx = x1 + pr;
+    ctx.strokeStyle = '#343536'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(x1, cy + pr, pr, -Math.PI / 2, 0); ctx.lineTo(mx, top - 8 * u); ctx.stroke();
+    ctx.beginPath(); ctx.arc(mx, top - 4 * u, 5 * u, 0, 7); ctx.stroke();
+    const gr = ctx.createLinearGradient(mx - s / 2, 0, mx + s / 2, 0); gr.addColorStop(0, '#6b6c6d'); gr.addColorStop(.5, '#343536'); gr.addColorStop(1, '#222');
+    rr(mx - s / 2, top, s, s, 6 * u); ctx.fillStyle = gr; ctx.fill(); rr(mx - s / 2, top, s, 8 * u, 4 * u); ctx.fillStyle = '#FFC000'; ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.fillText('m', mx, top + s * 0.62);
+    txt(`m = ${fmt(mEq)} kg`, mx, top + s + fs + 4); txt(`T = ${fmt(c.T)} N`, mx, top + s + 2 * fs + 8);
+  } else {      // Guitarra acústica: clavijero, mástil con diapasón, cuerpo, boca y puente
+    const nh0 = H * 0.055, nh1 = H * 0.07, bl = x0 + Lpx * 0.555, bw = 0.7 * Lpx, hmax = Math.min(H * 0.3, 0.39 * bw);
+    // Perfil del cuerpo (curva suave: hombros, cintura y parte baja), q = 0..1 desde la unión con el mango
+    const kq = [0, .1, .26, .42, .64, .82, .95, 1], kh = [.16, .6, .74, .64, .93, 1, .78, 0].map(v => v * hmax);
+    const km = kh.map((h, i) => (i === 0 || i === kh.length - 1 || (h - kh[i - 1]) * (kh[i + 1] - h) <= 0) ? 0 : (kh[i + 1] - kh[i - 1]) / (kq[i + 1] - kq[i - 1]));
+    const hh = q => { let i = 0; while (i < kq.length - 2 && q > kq[i + 1]) i++; const d = kq[i + 1] - kq[i], t2 = clamp((q - kq[i]) / d, 0, 1), t3 = t2 * t2 * t2, t4 = t2 * t2;
+      return (2 * t3 - 3 * t4 + 1) * kh[i] + (t3 - 2 * t4 + t2) * d * km[i] + (-2 * t3 + 3 * t4) * kh[i + 1] + (t3 - t4) * d * km[i + 1]; };
+    const outline = s2 => { ctx.beginPath(); for (let i = 0; i <= 60; i++) ctx.lineTo(bl + i / 60 * bw, cy - hh(i / 60) * s2); for (let i = 60; i >= 0; i--) ctx.lineTo(bl + i / 60 * bw, cy + hh(i / 60) * s2); ctx.closePath(); };
+    const bg2 = ctx.createRadialGradient(bl + bw * 0.62, cy, hmax * 0.1, bl + bw * 0.62, cy, hmax * 1.5); bg2.addColorStop(0, '#f0b968'); bg2.addColorStop(0.6, '#c9843a'); bg2.addColorStop(1, '#7a4416');
+    ctx.shadowColor = 'rgba(0,0,0,.28)'; ctx.shadowBlur = 14 * u; ctx.shadowOffsetY = 4 * u; outline(1); ctx.fillStyle = bg2; ctx.fill(); ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+    ctx.strokeStyle = '#4a2a0e'; ctx.lineWidth = 4; ctx.stroke(); outline(0.94); ctx.strokeStyle = 'rgba(255,236,190,.8)'; ctx.lineWidth = 2; ctx.stroke();
+    // Boca con roseta
+    const sx = bl + bw * 0.27, sr = hmax * 0.26;
+    ctx.beginPath(); ctx.arc(sx, cy, sr * 1.2, 0, 7); ctx.strokeStyle = '#4a2a0e'; ctx.lineWidth = 3; ctx.stroke(); dot(sx, cy, sr, '#1f120a', '#fff3d0');
+    // Clavijero con clavijas
+    const hs = W * 0.055, hhd = x => nh0 + H * 0.015 + (H * 0.085 - nh0 - H * 0.015) * (x0 - x) / hs;
+    ctx.beginPath(); ctx.moveTo(x0, cy - nh0 - 2); ctx.lineTo(x0 - hs, cy - hhd(x0 - hs)); ctx.lineTo(x0 - hs, cy + hhd(x0 - hs)); ctx.lineTo(x0, cy + nh0 + 2); ctx.closePath(); ctx.fillStyle = '#2b170a'; ctx.fill();
+    [0.25, 0.55, 0.85].forEach(f => { const hx = x0 - hs * f, hy = hhd(hx); dot(hx, cy - hy - 5 * u, 5 * u + 1, '#f3ead2', '#343536'); dot(hx, cy + hy + 5 * u, 5 * u + 1, '#f3ead2', '#343536'); });
+    txt('clavijas', Math.max(40, x0 - hs / 2), cy + H * 0.085 + fs * 1.7);
+    // Mango (madera clara) y diapasón (madera oscura, se ensancha hacia el cuerpo)
+    const xe = x0 + Lpx * 0.69, xj = bl + bw * 0.04, nhAt = x => nh0 + (nh1 - nh0) * clamp((x - x0) / (xe - x0), 0, 1);
+    ctx.beginPath(); ctx.moveTo(x0, cy - nh0 - 5 * u); ctx.lineTo(xj, cy - nhAt(xj) - 6 * u); ctx.lineTo(xj, cy + nhAt(xj) + 6 * u); ctx.lineTo(x0, cy + nh0 + 5 * u); ctx.closePath(); ctx.fillStyle = '#c58a49'; ctx.fill();
+    ctx.beginPath(); ctx.moveTo(x0, cy - nh0); ctx.lineTo(xe, cy - nh1); ctx.lineTo(xe, cy + nh1); ctx.lineTo(x0, cy + nh0); ctx.closePath(); ctx.fillStyle = '#2b170a'; ctx.fill();
+    for (let q = 1; q <= 19; q++){ const fx = x0 + Lpx * (1 - Math.pow(2, -q / 12)); ctx.strokeStyle = '#d4d4d4'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(fx, cy - nhAt(fx)); ctx.lineTo(fx, cy + nhAt(fx)); ctx.stroke(); }
+    [3, 5, 7, 9, 12].forEach(q => { const fx = x0 + Lpx * (1 - Math.pow(2, -(q - 0.5) / 12)); dot(fx, cy, 4 * u + 1, [5, 7, 12].includes(q) ? '#FFC000' : '#f4efe0', '#2b170a'); });
+    [5, 7, 12].forEach(q => { const fx = x0 + Lpx * (1 - Math.pow(2, -(q - 0.5) / 12)); txt(`traste ${q}`, fx, cy + nhAt(fx) + 8 * u + fs * 1.3); });
+    // Cejuela, otras cuerdas (solo decoración), puente con hueso blanco
+    rr(x0 - 4 * u, cy - nh0 - 2, 5 * u, 2 * nh0 + 4, 2); ctx.fillStyle = '#f4efe0'; ctx.fill();
+    ctx.strokeStyle = 'rgba(120,120,120,.7)'; ctx.lineWidth = 1.5;
+    [-2, -1, 1, 2, 3].forEach(i => { ctx.beginPath(); ctx.moveTo(x0, cy + i * H * 0.016); ctx.lineTo(x1, cy + i * H * 0.016); ctx.stroke(); });
+    const hb = 0.5 * hh((x1 - bl) / bw); rr(x1 - 6 * u, cy - hb, 20 * u, 2 * hb, 6 * u); ctx.fillStyle = '#2b170a'; ctx.fill();
+    ctx.fillStyle = '#f4efe0'; ctx.fillRect(x1 - 2 * u, cy - nh1 - 4 * u, 4 * u, 2 * nh1 + 8 * u);
+    txt('cejuela', x0, cy - nh0 - 14); txt('puente', x1 + 8 * u, cy - hb - 8);
+  }
+
+  // ----- Forma de la cuerda -----
+  const st = x => S.A * Math.sin(k * x) * Math.cos(ph);
+  const kd = 6 + (2 * Math.PI * S.f / c.v) % 40;
+  const dis = x => 0.15 * S.A * Math.pow(Math.sin(Math.PI * x / S.L), 0.7) * (0.6 * Math.sin(kd * x - ph) + 0.5 * Math.sin(1.9 * kd * x + 0.7 * ph + 1.3) + 0.3 * Math.sin(3.1 * kd * x - 1.3 * ph));
+  let yS = inf.w >= 1 ? st : x => inf.w * st(x) + (1 - inf.w) * dis(x);
+  if (t === 'D'){   // cuerda pulsada: suma de 24 modos, bₙ = 2hL²/(π²n²x₀(L−x₀))·sen(nπx₀/L)
+    const xp = S.x0 * S.L, cn = []; for (let n = 1; n <= 24; n++) cn[n] = 2 * S.A * S.L * S.L / (Math.PI * Math.PI * xp * (S.L - xp) * n * n) * Math.sin(n * Math.PI * S.x0);
+    yS = x => { let s = 0; for (let n = 1; n <= 24; n++) s += cn[n] * Math.sin(n * Math.PI * x / S.L) * Math.cos(n * ph); return s; };
+    ctx.setLineDash([8, 6]); ctx.strokeStyle = '#b88a00'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x0, cy); ctx.lineTo(X(xp), cy - S.A * ppm); ctx.lineTo(x1, cy); ctx.stroke(); ctx.setLineDash([]);
+    const pk = X(xp), py0 = cy - S.A * ppm;
+    ctx.beginPath(); ctx.moveTo(pk, py0 - 2 * u); ctx.lineTo(pk - 13 * u, py0 - 28 * u); ctx.lineTo(pk + 13 * u, py0 - 28 * u); ctx.closePath(); ctx.fillStyle = '#FFC000'; ctx.fill(); ctx.strokeStyle = '#343536'; ctx.lineWidth = 3; ctx.stroke();
+    txt(`x₀ = ${fmt(S.x0, 3)}·L`, pk, py0 - 38 * u);
+  }
+  // Baldosas λ/2 (pestaña 2–3)
+  if (t === 'A'){
+    const ty = H * 0.75, th = H * 0.075;
+    for (let j = 0; j < nm; j++){ rr(X(j * S.L / nm) + 2, ty, Lpx / nm - 4, th, 8 * u); ctx.fillStyle = j % 2 ? '#ffe08a' : '#fff3c4'; ctx.fill(); ctx.strokeStyle = '#343536'; ctx.lineWidth = 2; ctx.stroke(); ctx.fillStyle = '#343536'; ctx.textAlign = 'center'; ctx.fillText('λ/2', X((j + .5) * S.L / nm), ty + th * 0.68); }
+    txt(`L = ${nm} · λ/2   (λ/2 = ${fmt(S.L / nm, 3)} m)`, x0 + Lpx / 2, ty + th + fs * 1.5);
+  }
+  // Envolvente rellena y ondas componentes
+  if (inf.inTol && t !== 'D'){
+    ctx.beginPath(); for (let i = 0; i <= 400; i++){ const x = i / 400 * S.L; const py = cy - S.A * Math.abs(Math.sin(k * x)) * ppm; i ? ctx.lineTo(X(x), py) : ctx.moveTo(X(x), py); }
+    for (let i = 400; i >= 0; i--){ const x = i / 400 * S.L; ctx.lineTo(X(x), cy + S.A * Math.abs(Math.sin(k * x)) * ppm); } ctx.closePath(); ctx.fillStyle = 'rgba(255,192,0,.2)'; ctx.fill();
+    trace(x => S.A * Math.sin(k * x), '#a0791a', 2, [9, 6]); trace(x => -S.A * Math.sin(k * x), '#a0791a', 2, [9, 6]);
+    if (S.waves && (t === 'A' || t === 'E')){
+      trace(x => S.A / 2 * Math.sin(k * x - ph), '#1f6fd1', 3); trace(x => S.A / 2 * Math.sin(k * x + ph), '#d62728', 3);
+      txt('— Onda incidente (→)', W * 0.52, H * 0.07, '#1f6fd1', 'left'); txt('— Onda reflejada (←)', W * 0.52, H * 0.07 + fs * 1.3, '#d62728', 'left');
+      txt('— Suma = onda estacionaria', W * 0.52, H * 0.07 + fs * 2.6, '#343536', 'left');
+    }
+  }
+  trace(yS, '#343536', 5, null, true);   // la cuerda, con halo amarillo
+
+  // Nodos (negro) y antinodos (amarillo)
+  if (inf.inTol && t !== 'D' && nm <= 24){
+    const lab = Lpx / nm >= 10 * fs;
+    for (let j = 0; j <= nm; j++){ const px = X(j * S.L / nm); dot(px, cy, 8 * u + 2, '#000', '#fff'); if (lab && j > 0 && j < nm) txt('Nodo', px, cy + fs * 1.9); }
+    for (let j = 1; j <= nm; j++){ const xa = (2 * j - 1) * S.L / (2 * nm); dot(X(xa), cy - st(xa) * ppm, 10 * u + 3, '#FFC000', '#343536'); if (lab) txt('Antinodo', X(xa), cy - S.A * ppm - 16); }
+    if (t === 'C' && S.touch){ const fx = X(S.L / S.touch); dot(fx, cy, 15 * u + 4, 'rgba(52,53,54,.88)', '#fff'); txt('Dedo (sin presionar)', fx, cy - S.A * ppm - fs * 2.8); }
+  }
+}
+
+// ---------- Bucle de animación (≈60 fps) ----------
+let tPrev = performance.now();
+function loop(now){ const dt = Math.min(0.05, (now - tPrev) / 1000); tPrev = now; if (!S.paused) S.tau += dt * VIS * S.speed; draw(); requestAnimationFrame(loop); }
+reset(); ajustar(); requestAnimationFrame(loop);
+</script>
+</body>
+</html>
